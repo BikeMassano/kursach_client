@@ -15,14 +15,14 @@
 
 using namespace std;
 
-const short TalkPort = 8080; // Порт сокета
+const short TalkPort = 80; // Порт сокета
 const int DEFAULT_DATA_SIZE = 32;    // Размер данных по умолчанию в ICMP пакете
 const int DEFAULT_PACKET_COUNT = 4; // Количество передаваемых пакетов по умолчанию
 const float DEFAULT_INTERVAL = 1.0f; // Интервал между отправкой пакетов по умолчанию
 
-int DATA_SIZE; // Размер данных в ICMP пакете
-int PACKET_COUNT; // Количество передаваемых пакетов
-float INTERVAL; // Интервал между отправкой пакетов (в секундах)
+int DATA_SIZE = DEFAULT_DATA_SIZE; // Размер данных в ICMP пакете
+int PACKET_COUNT = DEFAULT_PACKET_COUNT; // Количество передаваемых пакетов
+float INTERVAL = DEFAULT_INTERVAL; // Интервал между отправкой пакетов (в секундах)
 
 // Инициализация Windows Sockets DLL
 int WinSockInit()
@@ -78,15 +78,15 @@ int receiveTCP(SOCKET s, char* buffer, int bufferSize)
 int main(int argc, char* argv[])
 {
     setlocale(LC_ALL, "rus");
-    DATA_SIZE = DEFAULT_DATA_SIZE; // Инициализация размера данных по умолчанию
-    PACKET_COUNT = DEFAULT_PACKET_COUNT; // Инициализация количества передаваемых пакетов по умолчанию
-    INTERVAL = DEFAULT_INTERVAL; // Инициализация интервала между отправкой пакетов по умолчанию
 
-    if (argc != 2)
+    char a[] = "google.com";
+    argv[1] = a;
+
+    /*if (argc != 2)
     {
         cerr << "Использование: ping <имя_хоста>\n";
         return 1;
-    }
+    }*/
 
     if (WinSockInit() != 0)
     {
@@ -108,36 +108,36 @@ int main(int argc, char* argv[])
     addr.sin_port = htons(TalkPort);
     addr.sin_addr.s_addr = *(unsigned long*)host->h_addr_list[0];
 
-    // Создание TCP сокета
-    SOCKET sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (sock == INVALID_SOCKET)
-    {
-        cerr << "Ошибка: Не удалось создать сокет. Код ошибки: " << WSAGetLastError() << endl;
-        WinSockClose();
-        return 1;
-    }
-
+    char* data = new char[DATA_SIZE + 1];
+    memset(data, 'A', DATA_SIZE);
+    data[DATA_SIZE] = '\0';
     // Установка времени ожидания ответа
     int timeout = 1000; // миллисекунды
-    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
-
-    // Подключение к серверу
-    if (connect(sock, (sockaddr*)&addr, sizeof(addr)) == SOCKET_ERROR)
-    {
-        cerr << "Ошибка: Не удалось подключиться к серверу. Код ошибки: " << WSAGetLastError() << endl;
-        stopTCP(sock);
-        WinSockClose();
-        return 1;
-    }
-
-    char* data = new char[DATA_SIZE + 1]; // Выделите на 1 байт больше для '\0'
-    memset(data, 'A', DATA_SIZE);
-    data[DATA_SIZE] = '\0';  // Добавьте нулевой символ
 
     cout << "Обмен пакетами с " << hostname << " [" << inet_ntoa(*(in_addr*)host->h_addr_list[0]) << "] с " << DATA_SIZE << " байтами данных:" << endl;
 
     for (size_t i = 0; i < PACKET_COUNT; i++)
     {
+        // Создание TCP сокета
+        SOCKET sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+        if (sock == INVALID_SOCKET)
+        {
+            cerr << "Ошибка: Не удалось создать сокет. Код ошибки: " << WSAGetLastError() << endl;
+            WinSockClose();
+            return 1;
+        }
+
+        setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
+
+        // Подключение к серверу
+        if (connect(sock, (sockaddr*)&addr, sizeof(addr)) == SOCKET_ERROR)
+        {
+            cerr << "Ошибка: Не удалось подключиться к серверу. Код ошибки: " << WSAGetLastError() << endl;
+            stopTCP(sock);
+            WinSockClose();
+            return 1;
+        }
+        // Начало таймера
         clock_t start_time;
 
         // Отправка данных
@@ -177,11 +177,9 @@ int main(int argc, char* argv[])
 
         // Ожидание по интервалу
         Sleep(INTERVAL * 1000);
+        stopTCP(sock);
     }
-
-    stopTCP(sock);
     WinSockClose();
     delete[] data;
-
     return 0;
 }
