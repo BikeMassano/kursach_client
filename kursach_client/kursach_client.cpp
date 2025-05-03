@@ -162,15 +162,13 @@ int main(int argc, char* argv[])
 {
     setlocale(LC_ALL, "rus");
 
-    char a[] = "localhost";
-    argv[1] = a;
-    const char* hostname = argv[1];
-
-    /*if (argc != 2)
+    if (argc != 2)
     {
         cerr << "Использование: ping <имя_хоста>\n";
         return 1;
-    }*/
+    }
+
+    const char* hostname = argv[1];
 
     try
     {
