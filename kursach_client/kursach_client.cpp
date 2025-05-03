@@ -76,7 +76,7 @@ int receiveTCP(SOCKET s, char* buffer, int bufferSize)
     return recv(s, buffer, bufferSize, 0);
 }
 
-int tcpPing(sockaddr_in addr, int timeout_ms, int packet_size)
+int tcpPing(sockaddr_in addr, int timeout_ms, int packet_size, int& ttl)
 {
     SOCKET sock = INVALID_SOCKET;
     char* buffer = nullptr;
@@ -128,6 +128,14 @@ int tcpPing(sockaddr_in addr, int timeout_ms, int packet_size)
         // Вычислить RTT (Round Trip Time)
         chrono::duration<double, milli> duration = end_time - start_time;
         int rtt = static_cast<int>(duration.count());
+
+        // Получение TTL (Time To Live)
+        int len = sizeof(ttl);
+        if (getsockopt(sock, IPPROTO_IP, IP_TTL, (char*)&ttl, &len) == SOCKET_ERROR)
+        {
+            cerr << "Ошибка при получении TTL: " << WSAGetLastError() << endl;
+            ttl = -1; // Indicate error getting TTL
+        }
 
         // Вывести ответ от сервера на консоль
         /*string received_string(buffer, bytes_received);
@@ -192,10 +200,11 @@ int main(int argc, char* argv[])
         cout << "Обмен пакетами с " << hostname << " [" << ip_str << "] с " << DATA_SIZE << " байтами данных:" << endl;
         for (size_t i = 0; i < PACKET_COUNT; i++)
         {
-            int rtt = tcpPing(addr, 1000, DATA_SIZE);
+            int ttl = 0; // TTL value
+            int rtt = tcpPing(addr, 1000, DATA_SIZE, ttl);
             if (rtt != -1) 
             {
-                cout << "Ответ от " << ip_str << ": Время = " << rtt << " мс" << endl;
+                cout << "Ответ от " << ip_str << ": число байт="<< DATA_SIZE << " время=" << rtt << "мс TTL=" << ttl << endl;
             }
             this_thread::sleep_for(chrono::duration<float>(INTERVAL));
         }
