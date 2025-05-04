@@ -6,11 +6,15 @@
 #include "ping_utils.h"
 
 using namespace std;
+using namespace winsock_utils;
 
 int main(int argc, char* argv[])
 {
     setlocale(LC_ALL, "rus");
     PingParameters config;
+
+    config.packet_count = 8;
+    config.interval = 0.1f;
 
     if (argc != 2)
     {
@@ -44,12 +48,24 @@ int main(int argc, char* argv[])
         char ip_str[INET_ADDRSTRLEN];
         inet_ntop(AF_INET, &addr.sin_addr, ip_str, INET_ADDRSTRLEN);
 
+        // Создать сокет
+        SOCKET sock = socketTCP();
+
+        // Установить время ожидания ответа
+        int timeout_ms = static_cast<int>(config.timeout * 1000); // Преобразуем в миллисекунды
+        setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout_ms, sizeof(timeout_ms));
+
+        // Подключиться к серверу
+        connectTCP(sock, addr);
+
         // Отправить пакеты и получить ответы
         cout << "Обмен пакетами с " << hostname << " [" << ip_str << "] с " << config.data_size << " байтами данных:" << endl;
+        
         for (size_t i = 0; i < config.packet_count; ++i)
         {
             int ttl = 0; // TTL value
-            int rtt = tcpPing(addr, config.timeout, config.data_size, ttl);
+
+            int rtt = tcpPing(sock, config.data_size, ttl);
             if (rtt != -1) 
             {
                 cout << "Ответ от " << ip_str << ": число байт="<< config.data_size << " время=" << rtt << "мс TTL=" << ttl << endl;

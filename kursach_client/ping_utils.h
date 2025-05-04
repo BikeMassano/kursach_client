@@ -16,4 +16,4 @@ struct PingParameters
     float timeout = 5.0f;
 };
 
-int tcpPing(sockaddr_in& addr, float& timeout, int& packet_size, int& ttl);
+int tcpPing(SOCKET& sock, int& packet_size, int& ttl);

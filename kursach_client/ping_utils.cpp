@@ -1,33 +1,14 @@
 #include "ping_utils.h"
 
-int tcpPing(sockaddr_in& addr, float& timeout, int& packet_size, int& ttl)
+using namespace winsock_utils;
+
+int tcpPing(SOCKET& sock, int& packet_size, int& ttl)
 {
-    SOCKET sock = INVALID_SOCKET;
-    char* buffer = nullptr;
+    // Выделить буфер
+    char* buffer = new char[packet_size+1];
 
     try
     {
-        // Выделить буфер
-        buffer = new char[packet_size];
-
-        // Создать сокет
-        sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-        if (sock == INVALID_SOCKET)
-        {
-            throw std::runtime_error("socket завершился с ошибкой: " + std::to_string(WSAGetLastError()));
-        }
-
-        // Установить время ожидания ответа
-        int timeout_ms = static_cast<int>(timeout * 1000); // Преобразуем в миллисекунды
-        // Установить время ожидания ответа
-        setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout));
-
-        // Подключиться к серверу
-        if (connect(sock, (sockaddr*)&addr, sizeof(addr)) == SOCKET_ERROR)
-        {
-            throw std::runtime_error("connect завершился с ошибкой: " + std::to_string(WSAGetLastError()));
-        }
-
         // Создать пакет данных
         std::string data(packet_size, 'A');
 
@@ -36,17 +17,9 @@ int tcpPing(sockaddr_in& addr, float& timeout, int& packet_size, int& ttl)
 
         // Отправить данные
         int bytes_sent = sendTCP(sock, data.c_str());
-        if (bytes_sent == SOCKET_ERROR)
-        {
-            throw std::runtime_error("Отправка данных завершилась с ошибкой: " + std::to_string(WSAGetLastError()));
-        }
 
         // Получить ответ
         int bytes_received = receiveTCP(sock, buffer, packet_size);
-        if (bytes_received == SOCKET_ERROR)
-        {
-            throw std::runtime_error("Получение данных завершилось с ошибкой: " + std::to_string(WSAGetLastError()));
-        }
 
         // Остановить таймер
         auto end_time = std::chrono::high_resolution_clock::now();

@@ -3,7 +3,8 @@
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 #include <winsock2.h>
 #include <ws2tcpip.h>
-#include <iostream> // Нужен для cerr в WinSockInit и WinSockClose
+#include <iostream>
+#include <string>
 
 #pragma comment(lib, "ws2_32.lib")
 
@@ -11,17 +12,26 @@
 #define SD_SEND 1
 #endif
 
-// Инициализация Windows Sockets DLL
-int WinSockInit();
+namespace winsock_utils 
+{
+	// Инициализация Windows Sockets DLL
+	int WinSockInit();
 
-// Отключение Windows Sockets DLL
-void WinSockClose();
+	// Отключение Windows Sockets DLL
+	void WinSockClose();
 
-// Остановка передачи данных
-void stopTCP(SOCKET s);
+	// Остановка передачи данных
+	void stopTCP(SOCKET& s);
 
-// Передача данных
-int sendTCP(SOCKET& s, const char* message);
+	// Создать сокет
+	SOCKET socketTCP();
 
-// Получение данных
-int receiveTCP(SOCKET& s, char* buffer, int bufferSize);
+	// Подключиться к серверу
+	void connectTCP(SOCKET& s, sockaddr_in& addr);
+
+	// Передача данных
+	int sendTCP(SOCKET& s, const char* message);
+
+	// Получение данных
+	int receiveTCP(SOCKET& s, char* buffer, int bufferSize);
+}
