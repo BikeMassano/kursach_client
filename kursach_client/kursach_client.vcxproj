@@ -128,6 +128,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="kursach_client.cpp" />
+    <ClCompile Include="ping_utils.cpp" />
+    <ClCompile Include="winsock_utils.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ping_utils.h" />
+    <ClInclude Include="winsock_utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
