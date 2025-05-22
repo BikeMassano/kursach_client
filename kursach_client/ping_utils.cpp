@@ -2,13 +2,25 @@
 
 using namespace winsock_utils;
 
-int tcpPing(SOCKET& sock, int& packet_size, int& ttl)
+int tcpPing(int& packet_size, int& ttl, float& timeout, sockaddr_in& addr)
 {
     // Выделить буфер
     char* buffer = new char[packet_size+1];
+    
+    SOCKET sock;
 
     try
     {
+        // Создать сокет
+        sock = socketTCP();
+
+        // Установить время ожидания ответа
+        int timeout_ms = static_cast<int>(timeout * 1000); // Преобразуем в миллисекунды
+        setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout_ms, sizeof(timeout_ms));
+
+        // Подключиться к серверу
+        connectTCP(sock, addr);
+
         // Создать пакет данных
         std::string data(packet_size, 'A');
 
@@ -40,8 +52,6 @@ int tcpPing(SOCKET& sock, int& packet_size, int& ttl)
         /*string received_string(buffer, bytes_received);
 
         cout << "Получено " << bytes_received << " байт от клиента: " << received_string << endl;*/
-
-        // Разница во времени между началом отправки и получением ответа
 
         // Очистить буфер
         delete[] buffer;

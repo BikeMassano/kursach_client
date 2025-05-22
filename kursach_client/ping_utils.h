@@ -14,6 +14,7 @@ struct PingParameters
     int packet_count = 4;
     float interval = 1.0f;
     float timeout = 5.0f;
+    bool continuous = false;
 };
 
-int tcpPing(SOCKET& sock, int& packet_size, int& ttl);
+int tcpPing(int& packet_size, int& ttl, float& timeout, sockaddr_in& addr);

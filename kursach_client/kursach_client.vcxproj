@@ -132,6 +132,7 @@
     <ClCompile Include="winsock_utils.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CLI11.hpp" />
     <ClInclude Include="ping_utils.h" />
     <ClInclude Include="winsock_utils.h" />
   </ItemGroup>
